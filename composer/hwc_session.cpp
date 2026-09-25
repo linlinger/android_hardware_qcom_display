@@ -2976,6 +2976,20 @@ int HWCSession::HandleBuiltInDisplays() {
       continue;
     }
 
+    // Skip secondary builtin display when IRIS Dual is enabled (single display
+    // semantics, matching ColorOS). IRIS chip drives the secondary panel
+    // internally; exposing it to SF causes double-display sync overhead and
+    // refresh-rate switching storms. See ColorOS composer-service:
+    //   "Disable connect Hotplug builtin display when IRIS Dual enable"
+    {
+      auto iris_feature = pxlw::IrisFeature::getInstance();
+      if (iris_feature && iris_feature->hasIrisDual()) {
+        DLOGI("IRIS Dual enabled, skipping builtin display sdm id = %d "
+              "(single display semantics)", info.display_id);
+        continue;
+      }
+    }
+
     for (auto &map_info : map_info_builtin_) {
       hwc2_display_t client_id = map_info.client_id;
 
